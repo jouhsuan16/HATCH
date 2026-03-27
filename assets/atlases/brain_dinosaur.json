@@ -1,0 +1,234 @@
+{
+    "frames": {
+        "brain_dinosaur_11": {
+            "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_5": {
+            "frame": {
+                "x": 0,
+                "y": 686,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_1": {
+            "frame": {
+                "x": 686,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_3": {
+            "frame": {
+                "x": 686,
+                "y": 686,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_2": {
+            "frame": {
+                "x": 0,
+                "y": 1372,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_6": {
+            "frame": {
+                "x": 686,
+                "y": 1372,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_9": {
+            "frame": {
+                "x": 1372,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_7": {
+            "frame": {
+                "x": 1372,
+                "y": 686,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_10": {
+            "frame": {
+                "x": 1372,
+                "y": 1372,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_8": {
+            "frame": {
+                "x": 0,
+                "y": 2058,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        },
+        "brain_dinosaur_4": {
+            "frame": {
+                "x": 686,
+                "y": 2058,
+                "w": 685,
+                "h": 685
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 685,
+                "h": 685
+            },
+            "sourceSize": {
+                "w": 685,
+                "h": 685
+            }
+        }
+    },
+    "meta": {
+        "app": "https://www.leshylabs.com/apps/sstool/",
+        "version": "Leshy SpriteSheet Tool v0.9.1",
+        "image": "brain_dinosaur.png",
+        "size": {
+            "w": 2057,
+            "h": 2743
+        },
+        "scale": 1
+    }
+}

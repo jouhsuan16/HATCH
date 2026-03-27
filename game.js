@@ -46,6 +46,12 @@ const CONFIG = {
         { key: 'three_head_dinosaur_loop', atlas: 'three_head_dinosaur_atlas', prefix: 'three_head_dinosaur_', start: 15, end: 18, repeat: -1 },
         { key: 'three_body_dinosaur_full', atlas: 'three_body_dinosaur_atlas', prefix: 'three_body_dinosaur_', end: 18, repeat: 0 },
         { key: 'three_body_dinosaur_loop', atlas: 'three_body_dinosaur_atlas', prefix: 'three_body_dinosaur_', start: 15, end: 18, repeat: -1 },
+        { key: 'brain_full', atlas: 'brain_dinosaur_atlas', prefix: 'brain_dinosaur_', end: 11, repeat: 0 },
+        { key: 'brain_loop', atlas: 'brain_dinosaur_atlas', prefix: 'brain_dinosaur_', start: 8, end: 11, repeat: -1 },
+        { key: 'fruit_dinosaur_full', atlas: 'fruit_dinosaur_atlas', prefix: 'fruit_dinosaur_', end: 16, repeat: 0 },
+        { key: 'fruit_dinosaur_loop', atlas: 'fruit_dinosaur_atlas', prefix: 'fruit_dinosaur_', start: 13, end: 16, repeat: -1 },
+        { key: 'cake_dinosaur_full', atlas: 'cake_dinosaur_atlas', prefix: 'cake_dinosaur_', end: 16, repeat: 0 },
+        { key: 'cake_dinosaur_loop', atlas: 'cake_dinosaur_atlas', prefix: 'cake_dinosaur_', start: 13, end: 16, repeat: -1 },
     ]
 };
 
@@ -58,7 +64,7 @@ const ALL_DINOSAURS = [
     { key: 'ghost_dinosaur', name: 'Ghost Dino', atlas: 'ghost_dinosaur_atlas', frame: 'ghost_dinosaur_8' },
     { key: 'three_head_dinosaur', name: 'Three-Head Dino', atlas: 'three_head_dinosaur_atlas', frame: 'three_head_dinosaur_15' },
     { key: 'three_body_dinosaur', name: 'Three-Body Dino', atlas: 'three_body_dinosaur_atlas', frame: 'three_body_dinosaur_15' },
-    { key: 'ending_8', name: '???', atlas: '', frame: '' },
+    { key: 'cake_dinosaur', name: 'Cake Dino', atlas: 'cake_dinosaur_atlas', frame: 'cake_dinosaur_16' },
     { key: 'ending_9', name: '???', atlas: '', frame: '' },
     { key: 'ending_10', name: '???', atlas: '', frame: '' },
     { key: 'ending_11', name: '???', atlas: '', frame: '' },
@@ -99,7 +105,7 @@ class GameScene extends Phaser.Scene {
         this.load.atlas('space_bk_atlas', 'assets/atlases/space_bk.png', 'assets/atlases/space_bk.json');
 
         // 載入工具圖示
-        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
+        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads', 'game_brain', 'game_flash', 'game_watch', 'game_candle', 'game_knife'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
 
         // 載入 UI 圖示
         ['game_home', 'game_star2', 'game_restart', 'game_trash_can', 'game_x'].forEach(img => this.load.image(img, `assets/ui/${img}.png`));
@@ -412,12 +418,19 @@ class GameScene extends Phaser.Scene {
                 this.evolveToCarnivore();
                 break;
             case 'game_fruit2':
-            // 您可以在這裡添加新食物的處理邏輯
+                this.evolveToFruitDinosaur();
+                break;
+            case 'game_knife':
+                this.evolveToCakeDinosaur();
+                break;
             case 'game_tape':
                 this.evolveToThreeHeadDinosaur();
                 break;
             case 'game_threads':
                 this.evolveToThreeBodyDinosaur();
+                break;
+            case 'game_brain':
+                this.evolveToBrainDinosaur();
                 break;
             case 'game_shovel':
                 // 您可以在這裡添加 'shovel' 工具的處理邏輯
@@ -494,6 +507,39 @@ class GameScene extends Phaser.Scene {
         this.eggSprite.on('animationupdate', onAnimUpdate);
     }
 
+    evolveToFruitDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('fruit_dinosaur_atlas', 'fruit_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('fruit_dinosaur_full');
+        this.eggSprite.once('animationcomplete-fruit_dinosaur_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('fruit_dinosaur_loop');
+            }
+        });
+
+        const onAnimUpdate = (anim, frame) => {
+            if (anim.key === 'fruit_dinosaur_full' && frame.textureFrame.endsWith('_12')) {
+                this.eggSprite.off('animationupdate', onAnimUpdate); // 避免重複觸發
+                this.showNextTools('game_candle', 'game_knife');
+            }
+        };
+        this.eggSprite.on('animationupdate', onAnimUpdate);
+    }
+
+    evolveToCakeDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('cake_dinosaur_atlas', 'cake_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('cake_dinosaur_full');
+        this.eggSprite.once('animationcomplete-cake_dinosaur_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('cake_dinosaur_loop');
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Cake Dino', 'cake_dinosaur'));
+            }
+        });
+    }
+
     evolveToThreeHeadDinosaur() {
         if (!this.eggSprite.active) return;
         this.eggSprite.stop().setTexture('three_head_dinosaur_atlas', 'three_head_dinosaur_1').setScale(CONFIG.EGG_SCALE);
@@ -516,6 +562,26 @@ class GameScene extends Phaser.Scene {
             if (this.eggSprite.active) {
                 this.eggSprite.play('three_body_dinosaur_loop');
                 this.time.delayedCall(1500, () => this.triggerEndingSequence('Three-Body Dino', 'three_body_dinosaur'));
+            }
+        });
+    }
+
+    evolveToBrainDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('brain_dinosaur_atlas', 'brain_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        const onAnimUpdate = (anim, frame) => {
+            if (anim.key === 'brain_full' && frame.textureFrame.endsWith('_11')) {
+                this.eggSprite.off('animationupdate', onAnimUpdate);
+                this.showNextTools('game_flash', 'game_watch');
+            }
+        };
+        this.eggSprite.on('animationupdate', onAnimUpdate);
+        
+        this.eggSprite.play('brain_full');
+        this.eggSprite.once('animationcomplete-brain_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('brain_loop');
             }
         });
     }
@@ -581,7 +647,7 @@ class GameScene extends Phaser.Scene {
         const onAnimUpdate = (anim, frame) => {
             if (anim.key === 'two_legs_full' && frame.textureFrame.endsWith('_4')) {
                 this.eggSprite.off('animationupdate', onAnimUpdate);
-                this.showNextTools('game_wing', 'game_wire');
+                this.showNextTools('game_wing', 'game_brain');
             }
         };
         this.eggSprite.on('animationupdate', onAnimUpdate);
