@@ -57,8 +57,10 @@ const CONFIG = {
         { key: 'back_to_egg_loop', atlas: 'back_to_egg_atlas', prefix: 'back_to_egg_', start: 9, end: 11, repeat: -1 },
         { key: 'robot_dinosaur_full', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', end: 9, repeat: 0 },
         { key: 'robot_dinosaur_loop', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', start: 6, end: 9, repeat: -1 },
-        { key: 'water_full', atlas: 'water_atlas', prefix: 'water-', end: 7, repeat: 0 },
-        { key: 'water_loop', atlas: 'water_atlas', prefix: 'water-', start: 5, end: 7, repeat: -1 },
+        { key: 'water_full', atlas: 'water_atlas', prefix: 'water_', end: 7, repeat: 0 },
+        { key: 'water_loop', atlas: 'water_atlas', prefix: 'water_', start: 5, end: 7, repeat: -1 },
+        { key: 'water_dinosaur_full', atlas: 'water_dinosaur_atlas', prefix: 'water_dinosaur_', end: 14, repeat: 0 },
+        { key: 'water_dinosaur_loop', atlas: 'water_dinosaur_atlas', prefix: 'water_dinosaur_', start: 11, end: 14, repeat: -1 },
     ]
 };
 
@@ -73,7 +75,7 @@ const ALL_DINOSAURS = [
     { key: 'three_body_dinosaur', name: 'Three-Body Dino', atlas: 'three_body_dinosaur_atlas', frame: 'three_body_dinosaur_15' },
     { key: 'cake_dinosaur', name: 'Cake Dino', atlas: 'cake_dinosaur_atlas', frame: 'cake_dinosaur_13' },
     { key: 'robot_dinosaur', name: 'Robot Dino', atlas: 'robot_dinosaur_atlas', frame: 'robot_dinosaur_8' },
-    { key: 'ending_10', name: '???', atlas: '', frame: '' },
+    { key: 'water_dinosaur', name: 'Water Dino', atlas: 'water_dinosaur_atlas', frame: 'water_dinosaur_13' },
     { key: 'ending_11', name: '???', atlas: '', frame: '' },
     { key: 'ending_12', name: '???', atlas: '', frame: '' },
 ];
@@ -740,16 +742,41 @@ class GameScene extends Phaser.Scene {
 
     evolveToWater() {
         if (!this.eggSprite.active) return;
-        this.eggSprite.stop().setTexture('water_atlas', 'water-1');
-        
-        this.eggSprite.setScale(1);
-        this.eggSprite.setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT);
-        this.eggSprite.setPosition(this.game.config.width / 2, this.game.config.height / 2);
 
-        this.eggSprite.play('water_full');
-        this.eggSprite.once('animationcomplete-water_full', () => {
-            if (this.eggSprite.active) {
-                this.eggSprite.play('water_loop');
+        // Ensure dinosaur is playing horns_loop
+        if (this.eggSprite.anims.currentAnim && this.eggSprite.anims.currentAnim.key !== 'horns_loop') {
+            this.eggSprite.play('horns_loop');
+        }
+
+        // Create water sprite overlay
+        const waterSprite = this.add.sprite(this.game.config.width / 2, this.game.config.height / 2, 'water_atlas', 'water-1')
+            .setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT)
+            .setDepth(this.eggSprite.depth + 1)
+            .setAlpha(0.6);
+
+        waterSprite.play('water_full');
+
+        const onWaterAnimUpdate = (anim, frame) => {
+            if (anim.key === 'water_full' && frame.textureFrame === 'water_4') {
+                waterSprite.off('animationupdate', onWaterAnimUpdate);
+
+                // Dinosaur becomes water_dinosaur
+                this.eggSprite.stop().setTexture('water_dinosaur_atlas', 'water_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+                this.eggSprite.play('water_dinosaur_full');
+                this.eggSprite.once('animationcomplete-water_dinosaur_full', () => {
+                    if (this.eggSprite.active) {
+                        this.eggSprite.play('water_dinosaur_loop');
+                        this.time.delayedCall(1500, () => this.triggerEndingSequence('Water Dino', 'water_dinosaur'));
+                    }
+                });
+            }
+        };
+        waterSprite.on('animationupdate', onWaterAnimUpdate);
+
+        waterSprite.once('animationcomplete-water_full', () => {
+            if (waterSprite.active) {
+                waterSprite.play('water_loop');
             }
         });
     }
