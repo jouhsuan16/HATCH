@@ -37,7 +37,8 @@ const CONFIG = {
         { key: 'egg_key_loop', atlas: 'egg_key_atlas', prefix: 'egg_key_', start: 16, end: 20, repeat: -1 },
         { key: 'ghost_dinosaur_full', atlas: 'ghost_dinosaur_atlas', prefix: 'ghost_dinosaur_', end: 14, repeat: 0 },
         { key: 'ghost_dinosaur_loop', atlas: 'ghost_dinosaur_atlas', prefix: 'ghost_dinosaur_', start: 10, end: 14, repeat: -1 },
-        { key: 'ghost_dinosaur_ending_loop', atlas: 'ghost_dinosaur_atlas', prefix: 'ghost_dinosaur_', start: 15, end: 18, repeat: -1 },
+        { key: 'ghost_dinosaur_ending', atlas: 'ghost_dinosaur_atlas', prefix: 'ghost_dinosaur_', start: 15, end: 15, repeat: 0 },
+        { key: 'ghost_dinosaur_gallery_loop', atlas: 'ghost_dinosaur_atlas', prefix: 'ghost_dinosaur_', start: 15, end: 18, repeat: -1 },
         { key: 'bone_dinosaur_full', atlas: 'bone_dinosaur_atlas', prefix: 'bone_dinosaur_', end: 19, repeat: 0 },
         { key: 'bone_dinosaur_loop', atlas: 'bone_dinosaur_atlas', prefix: 'bone_dinosaur_', start: 16, end: 19, repeat: -1 },
         { key: 'carnivore_dinosaur_full', atlas: 'carnivore_dinosaur_atlas', prefix: 'carnivore_dinosaur_', end: 15, repeat: 0 },
@@ -52,6 +53,10 @@ const CONFIG = {
         { key: 'fruit_dinosaur_loop', atlas: 'fruit_dinosaur_atlas', prefix: 'fruit_dinosaur_', start: 13, end: 16, repeat: -1 },
         { key: 'cake_dinosaur_full', atlas: 'cake_dinosaur_atlas', prefix: 'cake_dinosaur_', end: 16, repeat: 0 },
         { key: 'cake_dinosaur_loop', atlas: 'cake_dinosaur_atlas', prefix: 'cake_dinosaur_', start: 13, end: 16, repeat: -1 },
+        { key: 'back_to_egg_full', atlas: 'back_to_egg_atlas', prefix: 'back_to_egg_', end: 11, repeat: 0 },
+        { key: 'back_to_egg_loop', atlas: 'back_to_egg_atlas', prefix: 'back_to_egg_', start: 9, end: 11, repeat: -1 },
+        { key: 'robot_dinosaur_full', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', end: 9, repeat: 0 },
+        { key: 'robot_dinosaur_loop', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', start: 6, end: 9, repeat: -1 },
     ]
 };
 
@@ -61,11 +66,11 @@ const ALL_DINOSAURS = [
     { key: 'flying_dinosaur', name: 'Flying Dino', atlas: 'fly_dinosaur_atlas', frame: 'fly_dinosaur_5' },
     { key: 'flower_dinosaur', name: 'Flower Dino', atlas: 'flower_dinosaur_atlas', frame: 'flower_dinosaur_10' },
     { key: 'space_dinosaur', name: 'Space Dino', atlas: 'space_dinosaur_atlas', frame: 'space_dinosaur_7' },
-    { key: 'ghost_dinosaur', name: 'Ghost Dino', atlas: 'ghost_dinosaur_atlas', frame: 'ghost_dinosaur_8' },
+    { key: 'ghost_dinosaur', name: 'Ghost Dino', atlas: 'ghost_dinosaur_atlas', frame: 'ghost_dinosaur_15' },
     { key: 'three_head_dinosaur', name: 'Three-Head Dino', atlas: 'three_head_dinosaur_atlas', frame: 'three_head_dinosaur_15' },
     { key: 'three_body_dinosaur', name: 'Three-Body Dino', atlas: 'three_body_dinosaur_atlas', frame: 'three_body_dinosaur_15' },
-    { key: 'cake_dinosaur', name: 'Cake Dino', atlas: 'cake_dinosaur_atlas', frame: 'cake_dinosaur_16' },
-    { key: 'ending_9', name: '???', atlas: '', frame: '' },
+    { key: 'cake_dinosaur', name: 'Cake Dino', atlas: 'cake_dinosaur_atlas', frame: 'cake_dinosaur_13' },
+    { key: 'robot_dinosaur', name: 'Robot Dino', atlas: 'robot_dinosaur_atlas', frame: 'robot_dinosaur_8' },
     { key: 'ending_10', name: '???', atlas: '', frame: '' },
     { key: 'ending_11', name: '???', atlas: '', frame: '' },
     { key: 'ending_12', name: '???', atlas: '', frame: '' },
@@ -96,6 +101,8 @@ class GameScene extends Phaser.Scene {
         // 載入背景圖片
         this.load.image('home_bk', 'assets/images/home_bk.png');
         this.load.image('tool_bk', 'assets/images/tool_bk.png');
+        this.load.image('soil_bk', 'assets/images/soil_bk.png');
+        this.load.image('burrow_bk', 'assets/images/burrow_bk.png');
 
         // 載入所有動畫圖集
         const atlases = [...new Set(CONFIG.ANIMATIONS.map(a => a.atlas))];
@@ -105,7 +112,7 @@ class GameScene extends Phaser.Scene {
         this.load.atlas('space_bk_atlas', 'assets/atlases/space_bk.png', 'assets/atlases/space_bk.json');
 
         // 載入工具圖示
-        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads', 'game_brain', 'game_flash', 'game_watch', 'game_candle', 'game_knife'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
+        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads', 'game_brain', 'game_flash', 'game_watch', 'game_candle', 'game_knife', 'game_human', 'game_rain2'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
 
         // 載入 UI 圖示
         ['game_home', 'game_star2', 'game_restart', 'game_trash_can', 'game_x'].forEach(img => this.load.image(img, `assets/ui/${img}.png`));
@@ -250,8 +257,15 @@ class GameScene extends Phaser.Scene {
             this.galleryContainer.add(graphics);
 
             if (unlocked.includes(dinosaur.key) && dinosaur.atlas) {
-                const img = this.add.image(x + boxSize / 2, y + boxSize / 2, dinosaur.atlas, dinosaur.frame)
-                    .setDisplaySize(boxSize * 0.9, boxSize * 0.9);
+                let img;
+                if (dinosaur.galleryAnim) {
+                    img = this.add.sprite(x + boxSize / 2, y + boxSize / 2, dinosaur.atlas, dinosaur.frame)
+                        .setDisplaySize(boxSize * 0.9, boxSize * 0.9)
+                        .play(dinosaur.galleryAnim);
+                } else {
+                    img = this.add.image(x + boxSize / 2, y + boxSize / 2, dinosaur.atlas, dinosaur.frame)
+                        .setDisplaySize(boxSize * 0.9, boxSize * 0.9);
+                }
                 this.galleryContainer.add(img);
             } else {
                 const qmark = this.add.text(x + boxSize / 2, y + boxSize / 2, '?', { font: '48px Arial', fill: '#cccccc' }).setOrigin(0.5);
@@ -432,8 +446,14 @@ class GameScene extends Phaser.Scene {
             case 'game_brain':
                 this.evolveToBrainDinosaur();
                 break;
+            case 'game_flash':
+                this.evolveToRobotDinosaur();
+                break;
+            case 'game_watch':
+                this.evolveToBackToEgg();
+                break;
             case 'game_shovel':
-                // 您可以在這裡添加 'shovel' 工具的處理邏輯
+                this.transitionToSoilBackground();
                 break;
             default:
                 console.log(`沒有任何變化。`);
@@ -577,7 +597,7 @@ class GameScene extends Phaser.Scene {
             }
         };
         this.eggSprite.on('animationupdate', onAnimUpdate);
-        
+
         this.eggSprite.play('brain_full');
         this.eggSprite.once('animationcomplete-brain_full', () => {
             if (this.eggSprite.active) {
@@ -586,6 +606,32 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    evolveToRobotDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('robot_dinosaur_atlas', 'robot_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('robot_dinosaur_full');
+        this.eggSprite.once('animationcomplete-robot_dinosaur_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('robot_dinosaur_loop');
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Robot Dino', 'robot_dinosaur'));
+            }
+        });
+    }
+
+    evolveToBackToEgg() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('back_to_egg_atlas', 'back_to_egg_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('back_to_egg_full');
+        this.eggSprite.once('animationcomplete-back_to_egg_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('back_to_egg_loop');
+                // Uses 'cooked_egg' key to share the collection with the Cooked Egg ending
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Cooked Egg', 'cooked_egg'));
+            }
+        });
+    }
 
     evolveToGhost() {
         if (!this.eggSprite.active) return;
@@ -595,7 +641,7 @@ class GameScene extends Phaser.Scene {
         this.eggSprite.once('animationcomplete-ghost_dinosaur_full', () => {
             if (this.eggSprite.active) {
                 this.eggSprite.play('ghost_dinosaur_loop');
-                this.time.delayedCall(1500, () => this.triggerEndingSequence('Ghost Dino', 'ghost_dinosaur', true, 'ghost_dinosaur_ending_loop'));
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Ghost Dino', 'ghost_dinosaur', true, 'ghost_dinosaur_ending'));
             }
         });
     }
@@ -757,6 +803,47 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(waitDuration, () => {
             // 太空龍的結局演出在背景動畫之後
             this.triggerEndingSequence('Space Dino', 'space_dinosaur');
+        });
+    }
+
+    transitionToSoilBackground() {
+        if (!this.home_bk || !this.home_bk.active) return;
+
+        const centerX = this.game.config.width / 2;
+        const centerY = this.game.config.height / 2;
+        const screenHeight = this.game.config.height;
+        const slideDuration = 2000;
+
+        // 建立新的背景在畫面上方，準備向下移動？
+        // 題目: "home_bk往上移動，soil_bk由下往上接續出現。"
+        // 所以 soil_bk 一開始在畫面下方 (centerY + screenHeight)
+        const soilBg = this.add.image(centerX, centerY + screenHeight, 'soil_bk').setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT).setDepth(0);
+
+        this.tweens.add({
+            targets: [this.home_bk, soilBg],
+            y: '-=' + screenHeight,
+            duration: slideDuration,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                if (this.home_bk) this.home_bk.destroy();
+                this.home_bk = soilBg; // 更新 home_bk 參考
+
+                // burrow_bk 漸出
+                const testImg = this.add.image(centerX, centerY, 'burrow_bk')
+                    .setDepth(1)
+                    .setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT)
+                    .setAlpha(0);
+
+                this.tweens.add({
+                    targets: testImg,
+                    alpha: 1,
+                    duration: 1000,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        this.showNextTools('game_human', 'game_rain2');
+                    }
+                });
+            }
         });
     }
 
