@@ -57,6 +57,8 @@ const CONFIG = {
         { key: 'back_to_egg_loop', atlas: 'back_to_egg_atlas', prefix: 'back_to_egg_', start: 9, end: 11, repeat: -1 },
         { key: 'robot_dinosaur_full', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', end: 9, repeat: 0 },
         { key: 'robot_dinosaur_loop', atlas: 'robot_dinosaur_atlas', prefix: 'robot_dinosaur_', start: 6, end: 9, repeat: -1 },
+        { key: 'water_full', atlas: 'water_atlas', prefix: 'water-', end: 7, repeat: 0 },
+        { key: 'water_loop', atlas: 'water_atlas', prefix: 'water-', start: 5, end: 7, repeat: -1 },
     ]
 };
 
@@ -455,6 +457,9 @@ class GameScene extends Phaser.Scene {
             case 'game_shovel':
                 this.transitionToSoilBackground();
                 break;
+            case 'game_rain2':
+                this.evolveToWater();
+                break;
             default:
                 console.log(`沒有任何變化。`);
         }
@@ -729,6 +734,22 @@ class GameScene extends Phaser.Scene {
             if (this.eggSprite.active) {
                 this.eggSprite.play('flower_loop');
                 this.time.delayedCall(1500, () => this.triggerEndingSequence('Flower Dino', 'flower_dinosaur'));
+            }
+        });
+    }
+
+    evolveToWater() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('water_atlas', 'water-1');
+        
+        this.eggSprite.setScale(1);
+        this.eggSprite.setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT);
+        this.eggSprite.setPosition(this.game.config.width / 2, this.game.config.height / 2);
+
+        this.eggSprite.play('water_full');
+        this.eggSprite.once('animationcomplete-water_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('water_loop');
             }
         });
     }
