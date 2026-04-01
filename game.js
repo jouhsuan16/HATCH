@@ -190,10 +190,16 @@ class GameScene extends Phaser.Scene {
         this.createMenu();
 
         // 播放背景音樂
-        // 檢查 BGM 是否已在播放，如果沒有，才開始播放
         if (!this.sound.get('bgm_main') || !this.sound.get('bgm_main').isPlaying) {
             this.sound.play('bgm_main', { loop: true, volume: 0.5 });
         }
+
+        // --- 修正 BGM 延遲與瀏覽器自動播放限制 ---
+        this.input.once('pointerdown', () => {
+            if (this.sound.context.state === 'suspended') {
+                this.sound.context.resume();
+            }
+        });
     }
 
     createAnimations() {
