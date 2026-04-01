@@ -102,6 +102,45 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        // --- 增加載入進度條，避免一開始黑屏 ---
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        const progressBar = this.add.graphics();
+        const progressBox = this.add.graphics();
+        progressBox.fillStyle(0x222222, 0.8);
+        progressBox.fillRoundedRect(width / 2 - 160, height / 2 - 25, 320, 50, 10);
+        
+        const loadingText = this.make.text({
+            x: width / 2,
+            y: height / 2 - 50,
+            text: 'Loading...',
+            style: { font: '20px Arial', fill: '#ffffff' }
+        }).setOrigin(0.5, 0.5);
+        
+        const percentText = this.make.text({
+            x: width / 2,
+            y: height / 2,
+            text: '0%',
+            style: { font: '18px Arial', fill: '#ffffff' }
+        }).setOrigin(0.5, 0.5);
+        
+        this.load.on('progress', (value) => {
+            percentText.setText(parseInt(value * 100) + '%');
+            progressBar.clear();
+            progressBar.fillStyle(0xffffff, 1);
+            if (value > 0) {
+                progressBar.fillRoundedRect(width / 2 - 150, height / 2 - 15, 300 * value, 30, 5);
+            }
+        });
+        
+        this.load.on('complete', () => {
+            progressBar.destroy();
+            progressBox.destroy();
+            loadingText.destroy();
+            percentText.destroy();
+        });
+
         // 載入背景圖片
         this.load.image('home_bk', 'assets/images/home_bk.png');
         this.load.image('tool_bk', 'assets/images/tool_bk.png');
