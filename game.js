@@ -61,6 +61,10 @@ const CONFIG = {
         { key: 'water_loop', atlas: 'water_atlas', prefix: 'water_', start: 5, end: 7, repeat: -1 },
         { key: 'water_dinosaur_full', atlas: 'water_dinosaur_atlas', prefix: 'water_dinosaur_', end: 14, repeat: 0 },
         { key: 'water_dinosaur_loop', atlas: 'water_dinosaur_atlas', prefix: 'water_dinosaur_', start: 11, end: 14, repeat: -1 },
+        { key: 'two_necks_dinosaur_full', atlas: 'two_necks_dinosaur_atlas', prefix: 'two_necks_dinosaur_', end: 29, repeat: 0 },
+        { key: 'two_necks_dinosaur_loop', atlas: 'two_necks_dinosaur_atlas', prefix: 'two_necks_dinosaur_', start: 26, end: 29, repeat: -1 },
+        { key: 'human_dinosaur_full', atlas: 'human_dinosaur_atlas', prefix: 'human_dinosaur_', end: 13, repeat: 0 },
+        { key: 'human_dinosaur_loop', atlas: 'human_dinosaur_atlas', prefix: 'human_dinosaur_', start: 10, end: 13, repeat: -1 },
     ]
 };
 
@@ -76,8 +80,8 @@ const ALL_DINOSAURS = [
     { key: 'cake_dinosaur', name: 'Cake Dino', atlas: 'cake_dinosaur_atlas', frame: 'cake_dinosaur_13' },
     { key: 'robot_dinosaur', name: 'Robot Dino', atlas: 'robot_dinosaur_atlas', frame: 'robot_dinosaur_8' },
     { key: 'water_dinosaur', name: 'Water Dino', atlas: 'water_dinosaur_atlas', frame: 'water_dinosaur_13' },
-    { key: 'ending_11', name: '???', atlas: '', frame: '' },
-    { key: 'ending_12', name: '???', atlas: '', frame: '' },
+    { key: 'two_necks_dinosaur', name: 'Two-Necks Dino', atlas: 'two_necks_dinosaur_atlas', frame: 'two_necks_dinosaur_26' },
+    { key: 'human_dinosaur', name: 'Human Dino', atlas: 'human_dinosaur_atlas', frame: 'human_dinosaur_10' },
 ];
 
 
@@ -291,6 +295,51 @@ class GameScene extends Phaser.Scene {
         });
 
         this.galleryContainer.add(closeButton);
+
+        // 如果圖鑑已經集滿，延遲1秒後跳出完成對話框
+        if (unlocked.length === ALL_DINOSAURS.length) {
+            const hasShown = localStorage.getItem('hasShownCompletionDialog');
+            if (!hasShown) {
+                localStorage.setItem('hasShownCompletionDialog', 'true');
+                this.time.delayedCall(500, () => {
+                    this.showCompletionDialog();
+                });
+            }
+        }
+    }
+
+    showCompletionDialog() {
+        const centerX = this.game.config.width / 2;
+        const centerY = this.game.config.height / 2;
+
+        const confirmContainer = this.add.container(0, 0).setDepth(300);
+
+        const bg = this.add.graphics().fillStyle(0x000000, 0.9).fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+        bg.setInteractive(new Phaser.Geom.Rectangle(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT), Phaser.Geom.Rectangle.Contains);
+        confirmContainer.add(bg);
+
+        const dialogBox = this.add.graphics().fillStyle(0x222222, 1).fillRoundedRect(centerX - 200, centerY - 100, 400, 150, 16);
+        confirmContainer.add(dialogBox);
+
+        const message = "You completed the collection.\nWould you like to play again?";
+        const text = this.add.text(centerX, centerY - 50, message, { font: '18px Arial', fill: '#ffffff', align: 'center' }).setOrigin(0.5);
+        confirmContainer.add(text);
+
+        const yesButton = this.add.text(centerX - 70, centerY + 20, 'Yes', { font: '24px Arial', fill: '#ff0000' }).setOrigin(0.5).setPadding(10).setInteractive({ useHandCursor: true });
+        yesButton.on('pointerdown', () => {
+            if (this.galleryContainer && this.galleryContainer.active) this.galleryContainer.destroy();
+            localStorage.removeItem('unlockedDinosaurs');
+            localStorage.removeItem('hasShownCompletionDialog');
+            this.scene.restart();
+        });
+        confirmContainer.add(yesButton);
+
+        const noButton = this.add.text(centerX + 70, centerY + 20, 'No', { font: '24px Arial', fill: '#00ff00' }).setOrigin(0.5).setPadding(10).setInteractive({ useHandCursor: true });
+        noButton.on('pointerdown', () => {
+            bg.destroy();
+            confirmContainer.destroy();
+        });
+        confirmContainer.add(noButton);
     }
 
     showRestartConfirmation() {
@@ -301,6 +350,7 @@ class GameScene extends Phaser.Scene {
 
         // 1. 建立背景
         const bg = this.add.graphics().fillStyle(0x000000, 0.9).fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+        bg.setInteractive(new Phaser.Geom.Rectangle(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT), Phaser.Geom.Rectangle.Contains);
         confirmContainer.add(bg);
 
         // 2. 建立對話框
@@ -318,6 +368,7 @@ class GameScene extends Phaser.Scene {
             // 如果圖鑑是開的，先銷毀它
             if (this.galleryContainer && this.galleryContainer.active) this.galleryContainer.destroy();
             localStorage.removeItem('unlockedDinosaurs');
+            localStorage.removeItem('hasShownCompletionDialog');
             this.scene.restart();
         });
         confirmContainer.add(yesButton);
@@ -336,17 +387,18 @@ class GameScene extends Phaser.Scene {
     createTools(centerX) {
         this.tools.centerX = centerX;
         this.tools.toolY = CONFIG.POSITIONS.TOOL_Y;
-        const toolData = [
+        let toolData = [
             { key: 'game_key', x: centerX - 100, handler: () => this.handleToolClick('game_key') },
             { key: 'game_sun', x: centerX, handler: () => this.handleToolClick('game_sun') },
             { key: 'game_axe', x: centerX + 100, handler: () => this.handleToolClick('game_axe') },
         ];
+        toolData = this.shuffleTools(toolData);
         this.tools.items = toolData.map(data => this.createTool(data.x, this.tools.toolY, data.key, data.handler));
     }
 
     shuffleTools(toolData) {
-        // 50% 的機率進行隨機排序
-        if (Math.random() < 0.5) {
+        // 65% 的機率進行隨機排序 (即 < 0.35 保持原樣)
+        if (Math.random() < 0.35) {
             return toolData; // 保持原樣
         }
 
@@ -461,6 +513,12 @@ class GameScene extends Phaser.Scene {
                 break;
             case 'game_rain2':
                 this.evolveToWater();
+                break;
+            case 'game_candle':
+                this.evolveToTwoNecksDinosaur();
+                break;
+            case 'game_human':
+                this.evolveToHumanDinosaur();
                 break;
             default:
                 console.log(`沒有任何變化。`);
@@ -589,6 +647,32 @@ class GameScene extends Phaser.Scene {
             if (this.eggSprite.active) {
                 this.eggSprite.play('three_body_dinosaur_loop');
                 this.time.delayedCall(1500, () => this.triggerEndingSequence('Three-Body Dino', 'three_body_dinosaur'));
+            }
+        });
+    }
+
+    evolveToTwoNecksDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('two_necks_dinosaur_atlas', 'two_necks_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('two_necks_dinosaur_full');
+        this.eggSprite.once('animationcomplete-two_necks_dinosaur_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('two_necks_dinosaur_loop');
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Two-Necks Dino', 'two_necks_dinosaur'));
+            }
+        });
+    }
+
+    evolveToHumanDinosaur() {
+        if (!this.eggSprite.active) return;
+        this.eggSprite.stop().setTexture('human_dinosaur_atlas', 'human_dinosaur_1').setScale(CONFIG.EGG_SCALE);
+
+        this.eggSprite.play('human_dinosaur_full');
+        this.eggSprite.once('animationcomplete-human_dinosaur_full', () => {
+            if (this.eggSprite.active) {
+                this.eggSprite.play('human_dinosaur_loop');
+                this.time.delayedCall(1500, () => this.triggerEndingSequence('Human Dino', 'human_dinosaur'));
             }
         });
     }
