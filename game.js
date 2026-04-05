@@ -272,7 +272,7 @@ class GameScene extends Phaser.Scene {
                 }
                 this.galleryContainer.add(img);
             } else {
-                const qmark = this.add.text(x + boxSize / 2, y + boxSize / 2, '?', { font: '48px Panforte', fill: '#cccccc' }).setOrigin(0.5);
+                const qmark = this.add.text(x + boxSize / 2, y + boxSize / 2, '?', { font: '48px Arial', fill: '#cccccc' }).setOrigin(0.5);
                 this.galleryContainer.add(qmark);
             }
         });
