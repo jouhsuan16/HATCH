@@ -357,7 +357,7 @@ class GameScene extends Phaser.Scene {
             const hasShown = localStorage.getItem('hasShownCompletionDialog');
             if (!hasShown) {
                 localStorage.setItem('hasShownCompletionDialog', 'true');
-                this.time.delayedCall(500, () => {
+                this.time.delayedCall(800, () => {
                     this.showCompletionDialog();
                 });
             }
