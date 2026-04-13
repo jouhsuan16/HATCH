@@ -352,7 +352,7 @@ class GameScene extends Phaser.Scene {
 
         this.galleryContainer.add(closeButton);
 
-        // 如果圖鑑已經集滿，延遲1秒後跳出完成對話框
+        // 如果圖鑑已經集滿，延遲0.8秒後跳出完成對話框
         if (unlocked.length === ALL_DINOSAURS.length) {
             const hasShown = localStorage.getItem('hasShownCompletionDialog');
             if (!hasShown) {
