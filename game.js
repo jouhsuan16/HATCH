@@ -85,6 +85,89 @@ const ALL_DINOSAURS = [
 ];
 
 
+class BootScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'BootScene' });
+    }
+
+    preload() {
+        this.load.image('loading_bk', 'assets/images/loading.png');
+        this.load.image('splash_screen', 'assets/images/splash_screen.png');
+    }
+
+    create() {
+        this.scene.start('PreloadScene');
+    }
+}
+
+class PreloadScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PreloadScene' });
+    }
+
+    preload() {
+        const centerX = this.game.config.width / 2;
+        const centerY = this.game.config.height / 2;
+
+        // Display background
+        this.add.image(centerX, centerY, 'loading_bk').setDisplaySize(CONFIG.WIDTH, CONFIG.HEIGHT);
+
+        // Display splash screen image
+        const splashImg = this.add.image(centerX, centerY, 'splash_screen').setOrigin(0.5);
+        splashImg.displayWidth = CONFIG.WIDTH;
+        splashImg.scaleY = splashImg.scaleX;
+
+        // Loading bar at the bottom in the brown area
+        const barWidth = 250;
+        const barHeight = 20;
+        const barX = centerX - barWidth / 2;
+        const barY = 450;
+
+        const loadingBarBox = this.add.graphics();
+        loadingBarBox.fillStyle(0x222222, 0.8);
+        loadingBarBox.fillRoundedRect(barX, barY, barWidth, barHeight, 8); // 8 is approx 40% of 20
+
+        const loadingBar = this.add.graphics();
+
+        this.load.on('progress', (value) => {
+            loadingBar.clear();
+            loadingBar.fillStyle(0xffffff, 1);
+            const currentWidth = (barWidth - 4) * value;
+            if (currentWidth > 0) {
+                // radius 6 holds roughly the same proportion for height 16
+                loadingBar.fillRoundedRect(barX + 2, barY + 2, currentWidth, barHeight - 4, 6);
+            }
+        });
+
+        // 載入所有的 GameScene assets
+        this.load.image('home_bk', 'assets/images/home_bk.png');
+        this.load.image('tool_bk', 'assets/images/tool_bk.png');
+        this.load.image('soil_bk', 'assets/images/soil_bk.png');
+        this.load.image('burrow_bk', 'assets/images/burrow_bk.png');
+
+        const atlases = [...new Set(CONFIG.ANIMATIONS.map(a => a.atlas))];
+        atlases.forEach(atlas => {
+            this.load.atlas(atlas, `assets/atlases/${atlas.replace('_atlas', '')}.png`, `assets/atlases/${atlas.replace('_atlas', '')}.json`);
+        });
+        this.load.atlas('space_bk_atlas', 'assets/atlases/space_bk.png', 'assets/atlases/space_bk.json');
+
+        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads', 'game_brain', 'game_flash', 'game_watch', 'game_candle', 'game_knife', 'game_human', 'game_rain2'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
+
+        ['game_home', 'game_star2', 'game_restart', 'game_trash_can', 'game_x'].forEach(img => this.load.image(img, `assets/ui/${img}.png`));
+
+        this.load.audio('drop_001', ['assets/audio/drop_001.ogg', 'assets/audio/drop_001.mp3']);
+        this.load.audio('sfx_collect', ['assets/audio/confirmation_002.ogg', 'assets/audio/confirmation_002.mp3']);
+        this.load.audio('sfx_ui_click', ['assets/audio/glass_002.ogg', 'assets/audio/glass_002.mp3']);
+        this.load.audio('bgm_main', ['assets/audio/523725-mrthenoronha-8-bit-water-stage-loop-td5wvu.ogg', 'assets/audio/523725-mrthenoronha-8-bit-water-stage-loop-td5wvu.wav']);
+    }
+
+    create() {
+        this.time.delayedCall(500, () => {
+            this.scene.start('GameScene');
+        });
+    }
+}
+
 class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
@@ -105,34 +188,7 @@ class GameScene extends Phaser.Scene {
         this.slowClickDetector = null; // 用於檢測點擊太慢
     }
 
-    preload() {
-        // 載入背景圖片
-        this.load.image('home_bk', 'assets/images/home_bk.png');
-        this.load.image('tool_bk', 'assets/images/tool_bk.png');
-        this.load.image('soil_bk', 'assets/images/soil_bk.png');
-        this.load.image('burrow_bk', 'assets/images/burrow_bk.png');
 
-        // 載入所有動畫圖集
-        const atlases = [...new Set(CONFIG.ANIMATIONS.map(a => a.atlas))];
-        atlases.forEach(atlas => {
-            this.load.atlas(atlas, `assets/atlases/${atlas.replace('_atlas', '')}.png`, `assets/atlases/${atlas.replace('_atlas', '')}.json`);
-        });
-        this.load.atlas('space_bk_atlas', 'assets/atlases/space_bk.png', 'assets/atlases/space_bk.json');
-
-        // 載入工具圖示
-        ['game_axe', 'game_sun', 'game_sun2', 'game_key', 'game_meat', 'game_fruit', 'game_wing', 'game_wire', 'game_rain', 'game_ufo', 'game_shovel', 'game_axe2', 'game_grave', 'game_meat2', 'game_fruit2', 'game_tape', 'game_threads', 'game_brain', 'game_flash', 'game_watch', 'game_candle', 'game_knife', 'game_human', 'game_rain2'].forEach(img => this.load.image(img, `assets/tools/${img}.png`));
-
-        // 載入 UI 圖示
-        ['game_home', 'game_star2', 'game_restart', 'game_trash_can', 'game_x'].forEach(img => this.load.image(img, `assets/ui/${img}.png`));
-
-        // 預載入點擊音效
-        this.load.audio('drop_001', ['assets/audio/drop_001.ogg', 'assets/audio/drop_001.mp3']);
-        this.load.audio('sfx_collect', ['assets/audio/confirmation_002.ogg', 'assets/audio/confirmation_002.mp3']);
-        this.load.audio('sfx_ui_click', ['assets/audio/glass_002.ogg', 'assets/audio/glass_002.mp3']);
-
-        // 預載入背景音樂
-        this.load.audio('bgm_main', ['assets/audio/523725-mrthenoronha-8-bit-water-stage-loop-td5wvu.ogg', 'assets/audio/523725-mrthenoronha-8-bit-water-stage-loop-td5wvu.wav']);
-    }
 
     create() {
         this.currentGameState = GAME_STATE.EGG_RAW;
@@ -1244,7 +1300,7 @@ const phaserConfig = {
     type: Phaser.AUTO,
     width: CONFIG.WIDTH,
     height: CONFIG.HEIGHT,
-    scene: [GameScene]
+    scene: [BootScene, PreloadScene, GameScene]
 };
 
 const game = new Phaser.Game(phaserConfig);
