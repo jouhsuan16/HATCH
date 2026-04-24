@@ -147,26 +147,33 @@ window.HatchStats = {
         };
     },
 
-    async recordResult({ dinosaurKey = "", dinosaurName = "" } = {}) {
+    async recordResult({ dinosaurKey = "", dinosaurName = "", isCollectionComplete = false } = {}) {
         if (!dinosaurKey) return;
 
         const playerId = getPlayerId();
         const resultRef = doc(db, "resultStats", dinosaurKey);
         const selectionRef = doc(collection(db, "resultSelections"));
-        const batch = writeBatch(db);
-
-        batch.set(resultRef, {
+        const resultUpdate = {
             dinosaurKey,
             dinosaurName,
             selectedCount: increment(1),
             updatedAt: serverTimestamp(),
             gameVersion: GAME_VERSION
-        }, { merge: true });
+        };
+
+        if (!isCollectionComplete) {
+            resultUpdate.beforeCollectionCompleteCount = increment(1);
+        }
+
+        const batch = writeBatch(db);
+
+        batch.set(resultRef, resultUpdate, { merge: true });
 
         batch.set(selectionRef, {
             playerId,
             dinosaurKey,
             dinosaurName,
+            isCollectionCompleteAtSelection: isCollectionComplete,
             createdAt: serverTimestamp(),
             gameVersion: GAME_VERSION
         });

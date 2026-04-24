@@ -188,7 +188,6 @@ class GameScene extends Phaser.Scene {
         this.slowClickDetector = null; // 用於檢測點擊太慢
         this.hasStartedTimer = false;
         this.hasFinishedTimer = false;
-        this.statsTimerEvent = null;
     }
 
 
@@ -201,13 +200,6 @@ class GameScene extends Phaser.Scene {
         this.isAutoFlying = false;
         this.hasStartedTimer = this.hasActiveCollectionTimer();
         this.hasFinishedTimer = false;
-        this.stopStatsTimer();
-        if (this.hasStartedTimer) {
-            this.startStatsTimerDisplay();
-        } else {
-            this.updateStatsMessage('');
-        }
-        this.showCompletionPreviewIfRequested();
         const centerX = this.game.config.width / 2;
 
         this.loadUnlockedDinosaurs(); // 遊戲開始時讀取紀錄
@@ -1118,7 +1110,7 @@ class GameScene extends Phaser.Scene {
         collectButton.on('pointerdown', () => {
             this.sound.play('sfx_collect'); // 播放收集音效
             collectButton.disableInteractive().destroy(); // 按下後銷毀按鈕
-            this.recordSelectedResult(dinosaurName, dinosaurKey);
+            this.recordSelectedResult(dinosaurName, dinosaurKey, collectionInfo);
             this.finishHatchTimerIfCollectionComplete(collectionInfo);
 
             // 恐龍縮小飛入圖鑑
@@ -1155,10 +1147,14 @@ class GameScene extends Phaser.Scene {
         };
     }
 
-    recordSelectedResult(dinosaurName, dinosaurKey) {
+    recordSelectedResult(dinosaurName, dinosaurKey, collectionInfo) {
         if (!window.HatchStats || typeof window.HatchStats.recordResult !== 'function') return;
 
-        window.HatchStats.recordResult({ dinosaurName, dinosaurKey }).catch((error) => {
+        window.HatchStats.recordResult({
+            dinosaurName,
+            dinosaurKey,
+            isCollectionComplete: collectionInfo.isCollectionComplete
+        }).catch((error) => {
             console.error('Failed to record selected result:', error);
         });
     }
@@ -1174,8 +1170,6 @@ class GameScene extends Phaser.Scene {
             localStorage.setItem('hatch_start_time', String(Date.now()));
         }
 
-        this.startStatsTimerDisplay();
-
         if (!hasExistingStart && window.HatchStats && typeof window.HatchStats.start === 'function') {
             window.HatchStats.start();
         }
@@ -1185,10 +1179,6 @@ class GameScene extends Phaser.Scene {
         if (!collectionInfo.isCollectionComplete || this.hasFinishedTimer) return;
 
         this.hasFinishedTimer = true;
-        this.stopStatsTimer();
-        const localDurationMs = this.getCurrentRunDuration();
-        const localBestMs = this.saveLocalBestTime(localDurationMs);
-        this.updateStatsMessage(this.formatDuration(localDurationMs));
 
         if (!window.HatchStats || typeof window.HatchStats.finish !== 'function') {
             localStorage.removeItem('hatch_start_time');
@@ -1196,46 +1186,11 @@ class GameScene extends Phaser.Scene {
         }
 
         try {
-            const result = await window.HatchStats.finish();
-            if (!result) {
-                this.updateStatsResult(
-                    this.formatDuration(localDurationMs),
-                    this.formatDuration(localBestMs)
-                );
-                return;
-            }
-
-            const timeText = this.formatDuration(result.durationMs);
-            const bestText = this.formatDuration(result.bestTimeMs);
-            this.updateStatsResult(
-                timeText,
-                bestText,
-                result.hasRanking ? result.fasterThanPercent : null
-            );
+            await window.HatchStats.finish();
         } catch (error) {
             console.error('Failed to save Hatch stats:', error);
         } finally {
             localStorage.removeItem('hatch_start_time');
-        }
-    }
-
-    startStatsTimerDisplay() {
-        this.stopStatsTimer();
-        this.updateStatsMessage(this.formatDuration(this.getCurrentRunDuration()));
-
-        this.statsTimerEvent = this.time.addEvent({
-            delay: 250,
-            loop: true,
-            callback: () => {
-                this.updateStatsMessage(this.formatDuration(this.getCurrentRunDuration()));
-            }
-        });
-    }
-
-    stopStatsTimer() {
-        if (this.statsTimerEvent) {
-            this.statsTimerEvent.remove();
-            this.statsTimerEvent = null;
         }
     }
 
@@ -1246,60 +1201,9 @@ class GameScene extends Phaser.Scene {
     }
 
     clearActiveCollectionTimer() {
-        this.stopStatsTimer();
         localStorage.removeItem('hatch_start_time');
         this.hasStartedTimer = false;
         this.hasFinishedTimer = false;
-        this.updateStatsMessage('');
-    }
-
-    getCurrentRunDuration() {
-        const start = Number(localStorage.getItem('hatch_start_time'));
-        return start ? Date.now() - start : 0;
-    }
-
-    saveLocalBestTime(durationMs) {
-        const storageKey = 'hatch_local_best_time_ms';
-        const oldBest = Number(localStorage.getItem(storageKey));
-        const bestTime = oldBest && oldBest < durationMs ? oldBest : durationMs;
-        localStorage.setItem(storageKey, String(bestTime));
-        return bestTime;
-    }
-
-    formatDuration(durationMs) {
-        const minutes = Math.floor(durationMs / 60000);
-        const seconds = Math.floor((durationMs % 60000) / 1000);
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    updateStatsMessage(message) {
-        const statsEl = document.getElementById('hatch-stats');
-        if (statsEl) {
-            statsEl.textContent = message;
-        }
-    }
-
-    updateStatsResult(timeText, bestText, fasterThanPercent = null) {
-        const statsEl = document.getElementById('hatch-stats');
-        if (!statsEl) return;
-
-        const percentText = typeof fasterThanPercent === 'number'
-            ? `<div class="stats-percent">Faster than ${fasterThanPercent}% of players</div>`
-            : '';
-
-        statsEl.innerHTML = `
-            <div class="stats-title">Collection Complete</div>
-            <div>Your Time: ${timeText}</div>
-            <div>Your Best: ${bestText}</div>
-            ${percentText}
-        `;
-    }
-
-    showCompletionPreviewIfRequested() {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('previewComplete') === '1') {
-            this.updateStatsResult('09:13', '08:57', 84);
-        }
     }
 
     loadUnlockedDinosaurs() {
@@ -1472,7 +1376,6 @@ const phaserConfig = {
     type: Phaser.AUTO,
     width: CONFIG.WIDTH,
     height: CONFIG.HEIGHT,
-    parent: 'game-container',
     scene: [BootScene, PreloadScene, GameScene]
 };
 
