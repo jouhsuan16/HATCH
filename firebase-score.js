@@ -5,7 +5,6 @@ import {
     getDoc,
     setDoc,
     collection,
-    getDocs,
     increment,
     serverTimestamp,
     writeBatch
@@ -49,6 +48,7 @@ window.HatchStats = {
         if (!start) return null;
 
         const durationMs = Date.now() - start;
+        const durationFields = formatDurationFields(durationMs);
         const playerId = getPlayerId();
         const playerRef = doc(db, "players", playerId);
         const summaryRef = doc(db, "stats", "summary");
@@ -73,9 +73,13 @@ window.HatchStats = {
             completionCount: increment(1),
             totalCompletionTimeMs: increment(durationMs),
             lastCompletionTimeMs: durationMs,
+            lastCompletionTimeSeconds: durationFields.seconds,
+            lastCompletionTimeMinutes: durationFields.minutes,
+            lastCompletionTimeText: durationFields.text,
             lastCompletedAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-            gameVersion: GAME_VERSION
+            gameVersion: GAME_VERSION,
+            playerId
         };
 
         if (!oldRecord.exists()) {
@@ -84,6 +88,9 @@ window.HatchStats = {
 
         if (isNewBest) {
             playerUpdate.bestTimeMs = durationMs;
+            playerUpdate.bestTimeSeconds = durationFields.seconds;
+            playerUpdate.bestTimeMinutes = durationFields.minutes;
+            playerUpdate.bestTimeText = durationFields.text;
             playerUpdate.bestUpdatedAt = serverTimestamp();
         }
 
@@ -91,6 +98,9 @@ window.HatchStats = {
         batch.set(completionRef, {
             playerId,
             durationMs,
+            durationSeconds: durationFields.seconds,
+            durationMinutes: durationFields.minutes,
+            durationText: durationFields.text,
             isNewBest,
             gameVersion: GAME_VERSION,
             createdAt: serverTimestamp()
@@ -122,28 +132,10 @@ window.HatchStats = {
         await batch.commit();
         await updateSummaryAverages();
 
-        const allPlayers = await getDocs(collection(db, "players"));
-        const times = [];
-
-        allPlayers.forEach((doc) => {
-            const data = doc.data();
-            if (typeof data.bestTimeMs === "number") {
-                times.push(data.bestTimeMs);
-            }
-        });
-
-        const slowerCount = times.filter(t => t > durationMs).length;
-        const fasterThanPercent = times.length > 0
-            ? Math.round((slowerCount / times.length) * 100)
-            : 0;
-
         return {
             durationMs,
             bestTimeMs: isNewBest ? durationMs : oldBestTime,
-            isNewBest,
-            totalPlayers: times.length,
-            hasRanking: times.length > 0,
-            fasterThanPercent
+            isNewBest
         };
     },
 
@@ -192,7 +184,8 @@ async function recordPlayerStart() {
     batch.set(playerRef, {
         lastStartedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        gameVersion: GAME_VERSION
+        gameVersion: GAME_VERSION,
+        playerId
     }, { merge: true });
 
     if (!oldRecord.exists()) {
@@ -223,13 +216,37 @@ async function updateSummaryAverages() {
     const bestTimeSumMs = Number(data.bestTimeSumMs) || 0;
     const completionTimeSumMs = Number(data.completionTimeSumMs) || 0;
 
+    const averageBestTimeMs = completedPlayers > 0
+        ? Math.round(bestTimeSumMs / completedPlayers)
+        : 0;
+    const averageCompletionTimeMs = totalCompletions > 0
+        ? Math.round(completionTimeSumMs / totalCompletions)
+        : 0;
+    const averageBestFields = formatDurationFields(averageBestTimeMs);
+    const averageCompletionFields = formatDurationFields(averageCompletionTimeMs);
+
     await setDoc(summaryRef, {
-        averageBestTimeMs: completedPlayers > 0
-            ? Math.round(bestTimeSumMs / completedPlayers)
-            : 0,
-        averageCompletionTimeMs: totalCompletions > 0
-            ? Math.round(completionTimeSumMs / totalCompletions)
-            : 0,
+        averageBestTimeMs,
+        averageBestTimeSeconds: averageBestFields.seconds,
+        averageBestTimeMinutes: averageBestFields.minutes,
+        averageBestTimeText: averageBestFields.text,
+        averageCompletionTimeMs,
+        averageCompletionTimeSeconds: averageCompletionFields.seconds,
+        averageCompletionTimeMinutes: averageCompletionFields.minutes,
+        averageCompletionTimeText: averageCompletionFields.text,
         averagesUpdatedAt: serverTimestamp()
     }, { merge: true });
+}
+
+function formatDurationFields(durationMs) {
+    const safeDurationMs = Math.max(0, Number(durationMs) || 0);
+    const totalSeconds = Math.round(safeDurationMs / 1000);
+    const wholeMinutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return {
+        seconds: totalSeconds,
+        minutes: Number((safeDurationMs / 60000).toFixed(2)),
+        text: `${String(wholeMinutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    };
 }

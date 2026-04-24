@@ -198,6 +198,9 @@ class GameScene extends Phaser.Scene {
         this.clickTimestamps = [];
         this.sustainTimer = null;
         this.isAutoFlying = false;
+        if (!this.isCollectionComplete()) {
+            localStorage.removeItem('hatch_completion_recorded');
+        }
         this.hasStartedTimer = this.hasActiveCollectionTimer();
         this.hasFinishedTimer = false;
         const centerX = this.game.config.width / 2;
@@ -1143,7 +1146,8 @@ class GameScene extends Phaser.Scene {
         return {
             isNewUnlock,
             unlockedCount: unlocked.length,
-            isCollectionComplete: unlocked.length === ALL_DINOSAURS.length
+            isCollectionComplete: unlocked.length === ALL_DINOSAURS.length,
+            didCompleteCollectionNow: isNewUnlock && unlocked.length === ALL_DINOSAURS.length
         };
     }
 
@@ -1160,6 +1164,7 @@ class GameScene extends Phaser.Scene {
     }
 
     startHatchTimer() {
+        if (this.isCollectionComplete()) return;
         if (this.hasStartedTimer) return;
 
         this.hasStartedTimer = true;
@@ -1176,9 +1181,11 @@ class GameScene extends Phaser.Scene {
     }
 
     async finishHatchTimerIfCollectionComplete(collectionInfo) {
-        if (!collectionInfo.isCollectionComplete || this.hasFinishedTimer) return;
+        if (!collectionInfo.didCompleteCollectionNow || this.hasFinishedTimer) return;
+        if (localStorage.getItem('hatch_completion_recorded') === 'true') return;
 
         this.hasFinishedTimer = true;
+        localStorage.setItem('hatch_completion_recorded', 'true');
 
         if (!window.HatchStats || typeof window.HatchStats.finish !== 'function') {
             localStorage.removeItem('hatch_start_time');
@@ -1200,8 +1207,14 @@ class GameScene extends Phaser.Scene {
         return Boolean(start) && unlocked.length < ALL_DINOSAURS.length;
     }
 
+    isCollectionComplete() {
+        const unlocked = JSON.parse(localStorage.getItem('unlockedDinosaurs')) || [];
+        return unlocked.length >= ALL_DINOSAURS.length;
+    }
+
     clearActiveCollectionTimer() {
         localStorage.removeItem('hatch_start_time');
+        localStorage.removeItem('hatch_completion_recorded');
         this.hasStartedTimer = false;
         this.hasFinishedTimer = false;
     }
