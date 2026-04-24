@@ -8,24 +8,39 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@500&display=swap');
 
+        html {
+            min-height: 100%;
+        }
+
         body {
             margin: 0;
             background-color: #FF7BAC;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
-            height: 100vh;
+            min-height: 100svh;
+            height: auto;
+            padding: 12px 12px 24px;
+            box-sizing: border-box;
+            overflow-y: auto;
             font-family: Arial, sans-serif;
         }
 
         #game-container {
-            width: 512px;
-            height: 512px;
+            width: min(512px, calc(100vw - 24px));
+            aspect-ratio: 1;
+            flex: 0 0 auto;
+        }
+
+        #game-container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
         }
 
         #hatch-stats {
-            width: 512px;
+            width: min(512px, calc(100vw - 24px));
             min-height: 130px;
             margin-top: 10px;
             color: #ffffff;
