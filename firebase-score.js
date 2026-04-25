@@ -23,6 +23,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const GAME_VERSION = "HATCH_v1";
+const VISIT_RECORDED_KEY = "hatch_visit_recorded";
 
 function getPlayerId() {
     let id = localStorage.getItem("hatch_player_id");
@@ -173,6 +174,62 @@ window.HatchStats = {
         await batch.commit();
     }
 };
+
+recordPageVisit().catch((error) => {
+    console.error("Failed to record Hatch page visit:", error);
+});
+
+async function recordPageVisit() {
+    const playerId = getPlayerId();
+    const source = getVisitSource();
+    const visitRef = doc(collection(db, "visits"));
+    const summaryRef = doc(db, "stats", "summary");
+    const sourceRef = doc(db, "visitSources", source);
+    const isUniqueVisitor = localStorage.getItem(VISIT_RECORDED_KEY) !== "true";
+    const batch = writeBatch(db);
+
+    batch.set(visitRef, {
+        playerId,
+        source,
+        path: window.location.pathname,
+        referrer: document.referrer || "",
+        userAgent: navigator.userAgent,
+        createdAt: serverTimestamp(),
+        gameVersion: GAME_VERSION
+    });
+
+    batch.set(summaryRef, {
+        totalVisits: increment(1),
+        updatedAt: serverTimestamp(),
+        gameVersion: GAME_VERSION
+    }, { merge: true });
+
+    batch.set(sourceRef, {
+        source,
+        totalVisits: increment(1),
+        updatedAt: serverTimestamp(),
+        gameVersion: GAME_VERSION
+    }, { merge: true });
+
+    if (isUniqueVisitor) {
+        batch.set(summaryRef, {
+            uniqueVisitors: increment(1)
+        }, { merge: true });
+        batch.set(sourceRef, {
+            uniqueVisitors: increment(1)
+        }, { merge: true });
+        localStorage.setItem(VISIT_RECORDED_KEY, "true");
+    }
+
+    await batch.commit();
+}
+
+function getVisitSource() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("source") ||
+        params.get("utm_source") ||
+        (document.referrer ? "referrer" : "direct");
+}
 
 async function recordPlayerStart() {
     const playerId = getPlayerId();
