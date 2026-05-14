@@ -7,7 +7,8 @@ import {
     collection,
     increment,
     serverTimestamp,
-    writeBatch
+    writeBatch,
+    arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -146,6 +147,9 @@ window.HatchStats = {
         const playerId = getPlayerId();
         const resultRef = doc(db, "resultStats", dinosaurKey);
         const selectionRef = doc(collection(db, "resultSelections"));
+        const playerRef = doc(db, "players", playerId);
+        const summaryRef = doc(db, "stats", "summary");
+
         const resultUpdate = {
             dinosaurKey,
             dinosaurName,
@@ -160,8 +164,10 @@ window.HatchStats = {
 
         const batch = writeBatch(db);
 
+        // 1. 更新各角色的總統計數據
         batch.set(resultRef, resultUpdate, { merge: true });
 
+        // 2. 紀錄每一次選擇的獨立事件
         batch.set(selectionRef, {
             playerId,
             dinosaurKey,
@@ -170,6 +176,24 @@ window.HatchStats = {
             createdAt: serverTimestamp(),
             gameVersion: GAME_VERSION
         });
+
+        // 3. 在玩家 (players) 資料中新增搜集順序與各角色次數
+        // 使用 Date.now() 確保每次搜集都是獨一無二的物件，這樣 arrayUnion 才能把重複搜集的角色也記錄下來，保留完整順序
+        batch.set(playerRef, {
+            collectionHistory: arrayUnion({
+                key: dinosaurKey,
+                name: dinosaurName,
+                timestamp: Date.now() 
+            }),
+            [`collectionCounts.${dinosaurKey}`]: increment(1),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        // 4. 在全域統計 (stats/summary) 中也加上該角色被收集的總次數
+        batch.set(summaryRef, {
+            [`characterCounts.${dinosaurKey}`]: increment(1),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
 
         await batch.commit();
     }
